@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cek Aman — Agent Claim Check</title>
+<meta name="description" content="Community safety reports for free-claim contracts on BSC, written only by Agent ID holders. Read-only page: no wallet connect, no login.">
+<style>
+  :root { --bg:#0b1411; --card:#13201b; --muted:#8fb3a3; --text:#e9f6ef; --line:#24372f; --safe:#22c983; --scam:#ff5c5c; --mixed:#f5b942; --accent:#5fe0a8; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:1.6rem; margin:.2rem 0; }
+  h2 { font-size:1.15rem; margin:0 0 .6rem; }
+  p { margin:.4rem 0; }
+  .sub { color:var(--muted); }
+  .id { font-size:.92rem; color:var(--muted); font-style:italic; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin:14px 0; }
+  .banner { background:#3a2a07; border-color:#6b4f12; color:#ffe2a3; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .stat { text-align:center; padding:10px 4px; border:1px solid var(--line); border-radius:10px; }
+  .stat b { display:block; font-size:1.35rem; }
+  .stat span { font-size:.8rem; color:var(--muted); }
+  input, select, button, textarea { font:inherit; color:var(--text); background:#0e1915; border:1px solid var(--line); border-radius:10px; padding:10px 12px; width:100%; }
+  button { background:var(--accent); color:#05221a; border:0; font-weight:700; cursor:pointer; margin-top:8px; }
+  button.secondary { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  label { display:block; font-size:.9rem; color:var(--muted); margin:10px 0 4px; }
+  textarea { min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:.85rem; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.85rem; }
+  .s1 { background:rgba(34,201,131,.15); color:var(--safe); }
+  .s2 { background:rgba(255,92,92,.15); color:var(--scam); }
+  .s3 { background:rgba(245,185,66,.15); color:var(--mixed); }
+  .s0 { background:rgba(143,179,163,.15); color:var(--muted); }
+  .addr { font-family:ui-monospace,Menlo,monospace; font-size:.85rem; word-break:break-all; }
+  ul.list { list-style:none; padding:0; margin:0; }
+  ul.list li { border-top:1px solid var(--line); padding:10px 0; }
+  ul.list li:first-child { border-top:0; }
+  .small { font-size:.85rem; color:var(--muted); }
+  .warn { color:#ffd27a; }
+  ol { padding-left:1.2rem; }
+  a { color:var(--accent); }
+  @media (max-width:520px) { .row { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(3,1fr); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cek Aman</h1>
+  <p class="sub">Agent Claim Check: community safety reports for free-claim contracts on BSC, written only by Agent ID holders.</p>
+  <p class="id">Laporan keamanan kontrak klaim gratis dari sesama pemegang Agent ID. Cek dulu sebelum klaim.</p>
+
+  <div id="notDeployed" class="card banner" hidden>
+    <b>Not deployed yet.</b> The contract address on this page is still a placeholder.
+    <div class="small">Belum di-deploy: alamat kontrak masih placeholder.</div>
+  </div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat"><b id="stTargets">–</b><span>contracts reported</span></div>
+      <div class="stat"><b id="stReports">–</b><span>active reports</span></div>
+      <div class="stat"><b id="stGuardians">–</b><span>Guardians</span></div>
+    </div>
+    <p class="small" style="margin-top:10px">Contract: <span class="addr" id="caAddr">0xcC417b42e8a7db7615bfb6bebE32143759a19c6D</span> · <a href="https://bscscan.com/address/0xcC417b42e8a7db7615bfb6bebE32143759a19c6D#code" target="_blank" rel="noopener">verified source on BscScan</a></p>
+  </div>
+
+  <div class="card">
+    <h2>Check a contract / Cek kontrak</h2>
+    <label for="q">Contract address on BSC</label>
+    <input id="q" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <button id="btnCheck">Check</button>
+    <div id="checkOut" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recently reported / Baru dilaporkan</h2>
+    <ul class="list" id="recent"><li class="small">Loading…</li></ul>
+  </div>
+
+  <div class="card">
+    <h2>Report a contract / Laporkan kontrak</h2>
+    <p class="small">You need an Agent ID. You send the transaction yourself, from your own Agentic Wallet, and confirm it there. This page never connects to a wallet and never asks for a key, seed phrase, pairing code or QR login.</p>
+    <p class="small id">Butuh Agent ID. Transaksi kamu kirim sendiri dari Agentic Wallet kamu dan kamu konfirmasi di sana. Halaman ini tidak pernah minta kunci, seed phrase, kode pairing, atau login QR.</p>
+    <label for="t">Contract you checked or claimed</label>
+    <input id="t" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <div class="row">
+      <div>
+        <label for="v">Verdict</label>
+        <select id="v">
+          <option value="1">SAFE / Aman</option>
+          <option value="2">SCAM / Penipuan</option>
+        </select>
+      </div>
+      <div>
+        <label for="r">Reason</label>
+        <select id="r"></select>
+      </div>
+    </div>
+    <button id="btnPrompt">Make my prompt</button>
+    <label for="prompt">Paste this to your Agentic Wallet agent</label>
+    <textarea id="prompt" readonly placeholder="Fill in the contract above, then tap Make my prompt."></textarea>
+    <button class="secondary" id="btnCopy">Copy</button>
+    <p class="small warn">Only paste a prompt you made yourself on this page. Always read the preview before confirming: it must show value 0, no approval, and the Cek Aman contract address above.</p>
+    <p class="small">First report = free soulbound Guardian badge (gas only, about 250k gas). You can change or withdraw your report any time.</p>
+  </div>
+
+  <div class="card">
+    <h2>How it works</h2>
+    <ol class="small">
+      <li><b>One Agent ID, one voice.</b> Only addresses holding an Agent ID can report, one report per contract. Agent IDs are soulbound and one per address, so fake accounts can't pile on.</li>
+      <li><b>Proof of claim.</b> When you report, Cek Aman asks the target for your balance. If you really hold its token or NFT, your report is marked <i>proof-backed</i>.</li>
+      <li><b>Contracts only.</b> You can only report contracts, never personal wallets.</li>
+      <li><b>Safe by design.</b> No owner, no admin, no upgrades, no payable functions, no approvals, no token transfers. Open source and verified.</li>
+      <li><b>Not financial advice.</b> Reports are opinions of community members. Always do your own research.</li>
+    </ol>
+  </div>
+
+  <p class="small">Open source (MIT): <a href="https://github.com/herdin72/cek-aman" target="_blank" rel="noopener">github.com/herdin72/cek-aman</a>. Read-only page: data comes straight from public BSC RPC.</p>
+</main>
+
+<script>
+// ===== Config =====
+const CONTRACT = "0xcC417b42e8a7db7615bfb6bebE32143759a19c6D"; // BSC mainnet, deployed 25 Nov 2026
+const CHAIN_ID = 56;
+const RPCS = ["https://bsc-dataseed.bnbchain.org", "https://bsc-rpc.publicnode.com", "https://bsc.drpc.org"];
+const SEL = {
+  report: "9c44e04f", withdraw: "51cff8d9", getTally: "7d35e78d", getRecent: "d62c7cb1",
+  totalReports: "b00eba4f", totalGuardians: "3c8c0e40", targetsCount: "a2fe972c"
+};
+const REASONS = {
+  1: [[0,"No reason given"],[1,"Claimed, gas only, it worked"],[2,"Received the token/NFT"],[3,"Verified source, no risky owner powers"]],
+  2: [[0,"No reason given"],[4,"Hidden fee / not actually free"],[5,"Asked for token approval"],[6,"Reverted, gas lost"],[7,"Fake or impersonating brand"],[8,"Nothing received"]]
+};
+const STATUS = {0:["No reports","s0"],1:["Likely SAFE","s1"],2:["Likely SCAM","s2"],3:["MIXED","s3"]};
+
+// ===== Helpers =====
+const $ = id => document.getElementById(id);
+const isAddr = a => /^0x[0-9a-fA-F]{40}$/.test(a || "");
+const pad = hex => hex.replace(/^0x/,"").toLowerCase().padStart(64,"0");
+const deployed = CONTRACT !== "0x0000000000000000000000000000000000000000";
+
+async function rpc(method, params) {
+  let lastErr;
+  for (const url of RPCS) {
+    try {
+      const res = await fetch(url, {method:"POST", headers:{"content-type":"application/json"},
+        body: JSON.stringify({jsonrpc:"2.0", id:1, method, params})});
+      const j = await res.json();
+      if (j.error) throw new Error(j.error.message);
+      return j.result;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+const call = data => rpc("eth_call", [{to: CONTRACT, data: "0x" + data}, "latest"]);
+const words = hex => (hex.replace(/^0x/,"").match(/.{64}/g) || []);
+const num = w => parseInt(w, 16);
+
+async function getTally(addr) {
+  const w = words(await call(SEL.getTally + pad(addr)));
+  return {safe:num(w[0]), scam:num(w[1]), proofSafe:num(w[2]), proofScam:num(w[3]), status:num(w[4]), first:num(w[5]), last:num(w[6])};
+}
+function tallyHtml(addr, t) {
+  const [label, cls] = STATUS[t.status] || STATUS[0];
+  const when = t.last ? new Date(t.last * 1000).toLocaleString() : "";
+  return `<div><span class="pill ${cls}">${label}</span></div>
+    <div class="addr" style="margin-top:6px">${addr}</div>
+    <div class="small">SAFE ${t.safe} (${t.proofSafe} proof-backed) · SCAM ${t.scam} (${t.proofScam} proof-backed)${when ? " · last report " + when : ""}</div>`;
+}
+
+// ===== UI =====
+async function loadStats() {
+  $("caAddr").textContent = CONTRACT;
+  if (!deployed) { $("notDeployed").hidden = false; $("recent").innerHTML = '<li class="small">Waiting for deployment.</li>'; return; }
+  try {
+    const [a, b, c] = await Promise.all([call(SEL.targetsCount), call(SEL.totalReports), call(SEL.totalGuardians)]);
+    $("stTargets").textContent = num(words(a)[0]);
+    $("stReports").textContent = num(words(b)[0]);
+    $("stGuardians").textContent = num(words(c)[0]);
+    const w = words(await call(SEL.getRecent + pad("14")));
+    const n = num(w[1]);
+    const addrs = w.slice(2, 2 + n).map(x => "0x" + x.slice(24));
+    if (!addrs.length) { $("recent").innerHTML = '<li class="small">No reports yet. Be the first Guardian.</li>'; return; }
+    const tallies = await Promise.all(addrs.map(getTally));
+    $("recent").innerHTML = addrs.map((a, i) => `<li>${tallyHtml(a, tallies[i])}</li>`).join("");
+  } catch (e) {
+    $("recent").innerHTML = '<li class="small">Could not reach the BSC RPC. Try again later.</li>';
+  }
+}
+
+async function check() {
+  const a = $("q").value.trim();
+  const out = $("checkOut");
+  if (!isAddr(a)) { out.innerHTML = '<p class="warn">Enter a valid 0x… address.</p>'; return; }
+  if (!deployed) { out.innerHTML = '<p class="small">Not deployed yet.</p>'; return; }
+  out.innerHTML = '<p class="small">Checking…</p>';
+  try {
+    const code = await rpc("eth_getCode", [a, "latest"]);
+    if (!code || code === "0x") { out.innerHTML = '<p class="warn">That address is not a contract on BSC. Cek Aman only rates contracts.</p>'; return; }
+    out.innerHTML = tallyHtml(a, await getTally(a));
+  } catch (e) { out.innerHTML = '<p class="warn">RPC error. Try again.</p>'; }
+}
+
+function fillReasons() {
+  const v = $("v").value;
+  $("r").innerHTML = REASONS[v].map(([k, l]) => `<option value="${k}">${k} · ${l}</option>`).join("");
+}
+
+function makePrompt() {
+  const t = $("t").value.trim();
+  if (!isAddr(t)) { $("prompt").value = "Enter the contract address you checked first (0x… 40 hex characters)."; return; }
+  const v = $("v").value, r = $("r").value;
+  const vName = v === "1" ? "SAFE" : "SCAM";
+  const calldata = "0x" + SEL.report + pad(t) + pad(parseInt(v).toString(16)) + pad(parseInt(r).toString(16));
+  $("prompt").value =
+`On BSC (chain ${CHAIN_ID}), from my own Agentic Wallet, make a contract call:
+- to: ${CONTRACT} (Cek Aman)
+- function: report(address target, uint8 verdict, uint8 reason)
+- target: ${t}
+- verdict: ${v} (${vName})
+- reason: ${r}
+- value: 0
+- calldata: ${calldata}
+Show me the preview first (it must be value 0 with no token approval) and wait for my confirmation before executing.`;
+}
+
+$("btnCheck").onclick = check;
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+$("v").onchange = fillReasons;
+$("btnPrompt").onclick = makePrompt;
+$("btnCopy").onclick = async () => {
+  const txt = $("prompt").value;
+  if (!txt) return;
+  try { await navigator.clipboard.writeText(txt); $("btnCopy").textContent = "Copied"; }
+  catch { $("prompt").select(); document.execCommand("copy"); $("btnCopy").textContent = "Copied"; }
+  setTimeout(() => $("btnCopy").textContent = "Copy", 1500);
+};
+fillReasons();
+loadStats();
+</script>
+</body>
+</html>
